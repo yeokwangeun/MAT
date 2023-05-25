@@ -5,6 +5,7 @@ from yolov3.models import *  # set ONNX_EXPORT in models.py
 from yolov3.utils.datasets import *
 from yolov3.utils.utils import *
 from deep_sort import DeepSort
+from midas.run import get_model, get_depth
 
 deepsort = DeepSort("deep_sort/deep/checkpoint/ckpt.t7")
 palette = (2 ** 11 - 1, 2 ** 15 - 1, 2 ** 20 - 1)
@@ -59,6 +60,7 @@ def detect(save_img=True):
 
     # Initialize model
     model = Darknet(opt.cfg, img_size)
+    midas_params = get_model()
 
     # Load weights
     attempt_download(weights)
@@ -100,6 +102,7 @@ def detect(save_img=True):
         if img.ndimension() == 3:
             img = img.unsqueeze(0)
         pred = model(img)[0]
+        depth = get_depth(im0s, midas_params)
 
         if opt.half:
             pred = pred.float()
