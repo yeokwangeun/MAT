@@ -90,9 +90,10 @@ def detect(save_img=True):
     names = load_classes(opt.names)
     colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(len(names))]
 
-    # Run inference
+    # Run inference - single video 
     t0 = time.time()
-    for path, img, im0s, vid_cap in dataset:
+    result = []
+    for frame_num, (path, img, im0s, vid_cap) in enumerate(dataset):
         t = time.time()
 
         # Get detections
@@ -154,6 +155,8 @@ def detect(save_img=True):
                     #print('\n\n\t\ttracked objects')
                     #print(outputs)
 
+            result.append(np.insert(outputs, 0, frame_num+1, axis=1))
+
             # Print time (inference + NMS)
             print('%sDone. (%.3fs)' % (s, time.time() - t))
 
@@ -183,6 +186,11 @@ def detect(save_img=True):
         print('Results saved to %s' % os.getcwd() + os.sep + out)
         if platform == 'darwin':  # MacOS
             os.system('open ' + out + ' ' + save_path)
+
+    if len(result) > 0:
+        result = np.vstack(result) 
+        print("Result shape: ", result.shape)
+        np.savetxt(str(Path(out))+'/raw_tracker.csv', result, delimiter=",", fmt='%d')
 
     print('Done. (%.3fs)' % (time.time() - t0))
 
