@@ -39,11 +39,10 @@ class Detection(object):
         return ret
 
     def to_xyah(self):
-        """Convert bounding box to format `(center x, center y, center z, x/y ratio, y/z ratio,
-        height)`, where the aspect ratio is `width / height`.
+        """Convert bounding box to format `(center x, center y, center z, w/h ratio, height,
+        depth)``.
         """
         ret = self.tlwh.copy()
         ret[:3] += ret[3:] / 2
         ret[3] /= ret[4]
-        ret[4] /= ret[5]
         return ret

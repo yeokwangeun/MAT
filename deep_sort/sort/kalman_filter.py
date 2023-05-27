@@ -26,13 +26,13 @@ class KalmanFilter(object):
 
     The 8-dimensional state space
 
-        x, y, z, xyr, yzr, h, vx, vy, vz, vxyr, vyzr, vh
+        x, y, z, w/h, h, d, vx, vy, vz, vxyr, vyzr, vh
 
-    contains the bounding box center position (x, y, z), x/y ratio, y/z ratio, height h,
+    contains the bounding box center position (x, y, z), w/h ratio, height h, depth d,
     and their respective velocities.
 
     Object motion follows a constant velocity model. The bounding box location
-    (x, y, z, xy, yz, h) is taken as direct observation of the state space (linear
+    (x, y, z, a, h, d) is taken as direct observation of the state space (linear
     observation model).
 
     """
