@@ -10,7 +10,7 @@ def iou(bbox, candidates):
     Parameters
     ----------
     bbox : ndarray
-        A bounding box in format `(top left x, top left y, width, height)`.
+        A bounding box in format `(top left x, top left y, top left z, width, height, depth)`.
     candidates : ndarray
         A matrix of candidate bounding boxes (one per row) in the same format
         as `bbox`.
@@ -23,20 +23,22 @@ def iou(bbox, candidates):
         occluded by the candidate.
 
     """
-    bbox_tl, bbox_br = bbox[:2], bbox[:2] + bbox[2:]
-    candidates_tl = candidates[:, :2]
-    candidates_br = candidates[:, :2] + candidates[:, 2:]
+    bbox_tl, bbox_br = bbox[:3], bbox[:3] + bbox[3:]
+    candidates_tl = candidates[:, :3]
+    candidates_br = candidates[:, :3] + candidates[:, 3:]
 
     tl = np.c_[np.maximum(bbox_tl[0], candidates_tl[:, 0])[:, np.newaxis],
-               np.maximum(bbox_tl[1], candidates_tl[:, 1])[:, np.newaxis]]
+               np.maximum(bbox_tl[1], candidates_tl[:, 1])[:, np.newaxis],
+               np.maximum(bbox_tl[2], candidates_tl[:, 2])[:, np.newaxis]]
     br = np.c_[np.minimum(bbox_br[0], candidates_br[:, 0])[:, np.newaxis],
-               np.minimum(bbox_br[1], candidates_br[:, 1])[:, np.newaxis]]
-    wh = np.maximum(0., br - tl)
+               np.minimum(bbox_br[1], candidates_br[:, 1])[:, np.newaxis],
+               np.minimum(bbox_br[2], candidates_br[:, 2])[:, np.newaxis]]
+    whd = np.maximum(0., br - tl)
 
-    area_intersection = wh.prod(axis=1)
-    area_bbox = bbox[2:].prod()
-    area_candidates = candidates[:, 2:].prod(axis=1)
-    return area_intersection / (area_bbox + area_candidates - area_intersection)
+    vol_intersection = whd.prod(axis=1)
+    vol_bbox = bbox[3:].prod()
+    vol_candidates = candidates[:, 3:].prod(axis=1)
+    return vol_intersection / (vol_bbox + vol_candidates - vol_intersection)
 
 
 def iou_cost(tracks, detections, track_indices=None,
