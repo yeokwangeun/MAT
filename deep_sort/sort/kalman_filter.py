@@ -26,7 +26,7 @@ class KalmanFilter(object):
 
     The 8-dimensional state space
 
-        x, y, z, w/h, h, d, vx, vy, vz, vxyr, vyzr, vh
+        x, y, z, a, h, d, vx, vy, vz, va, vh, vd
 
     contains the bounding box center position (x, y, z), w/h ratio, height h, depth d,
     and their respective velocities.
@@ -78,13 +78,13 @@ class KalmanFilter(object):
             2 * self._std_weight_position * measurement[5],
             2 * self._std_weight_position * measurement[5],
             1e-2,
-            1e-2,
+            2 * self._std_weight_position * measurement[5],
             2 * self._std_weight_position * measurement[5],
             10 * self._std_weight_velocity * measurement[5],
             10 * self._std_weight_velocity * measurement[5],
             10 * self._std_weight_velocity * measurement[5],
             1e-5,
-            1e-5,
+            10 * self._std_weight_velocity * measurement[5],
             10 * self._std_weight_velocity * measurement[5]]
         covariance = np.diag(np.square(std))
         return mean, covariance
@@ -113,14 +113,14 @@ class KalmanFilter(object):
             self._std_weight_position * mean[5],
             self._std_weight_position * mean[5],
             1e-2,
-            1e-2,
+            self._std_weight_position * mean[5],
             self._std_weight_position * mean[5]]
         std_vel = [
             self._std_weight_velocity * mean[5],
             self._std_weight_velocity * mean[5],
             self._std_weight_velocity * mean[5],
             1e-5,
-            1e-5,
+            self._std_weight_velocity * mean[5],
             self._std_weight_velocity * mean[5]]
         motion_cov = np.diag(np.square(np.r_[std_pos, std_vel]))
 
@@ -152,7 +152,7 @@ class KalmanFilter(object):
             self._std_weight_position * mean[5],
             self._std_weight_position * mean[5],
             1e-1,
-            1e-1,
+            self._std_weight_position * mean[5],
             self._std_weight_position * mean[5]]
         innovation_cov = np.diag(np.square(std))
 
