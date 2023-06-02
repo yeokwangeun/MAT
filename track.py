@@ -105,6 +105,8 @@ def detect(save_img=True):
             img = img.unsqueeze(0)
         pred = model(img)[0]
         depth_map = get_depth(im0s, midas_params)
+        ## Normalize depth_map to 0-1
+        # depth_map = (depth_map - np.min(depth_map)) / (np.max(depth_map) - np.min(depth_map))
 
         if opt.half:
             pred = pred.float()
@@ -142,7 +144,10 @@ def detect(save_img=True):
                     bbox_h = abs(xyxy[1].item() - xyxy[3].item())
                     x_c, y_c, bbox_w, bbox_h = bbox_rel(img_w, img_h, bbox_left, bbox_top, bbox_w, bbox_h)
                     #print(x_c, y_c, bbox_w, bbox_h)
-                    bbox_depth_map = depth_map[bbox_left:bbox_left+bbox_w, bbox_top:bbox_top+bbox_h]
+                    print(depth_map.shape)
+                    print(depth_map)
+                    print(bbox_left, bbox_top, bbox_w, bbox_h)
+                    bbox_depth_map = depth_map[int(bbox_top):int(bbox_top+bbox_h), int(bbox_left):int(bbox_left+bbox_w)]
                     bbox_d = np.max(bbox_depth_map) - np.min(bbox_depth_map)
                     z_c = np.mean(bbox_depth_map)
                     obj = [x_c, y_c, z_c, bbox_w, bbox_h, bbox_d]
