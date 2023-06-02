@@ -79,13 +79,13 @@ class KalmanFilter(object):
             2 * self._std_weight_position * measurement[4],
             1e-2,
             2 * self._std_weight_position * measurement[4],
-            2 * self._std_weight_position * measurement[4],
+            1e-2,
             10 * self._std_weight_velocity * measurement[4],
             10 * self._std_weight_velocity * measurement[4],
             10 * self._std_weight_velocity * measurement[4],
             1e-5,
             10 * self._std_weight_velocity * measurement[4],
-            10 * self._std_weight_velocity * measurement[4]]
+            1e-5]
         covariance = np.diag(np.square(std))
         return mean, covariance
 
@@ -114,14 +114,14 @@ class KalmanFilter(object):
             self._std_weight_position * mean[4],
             1e-2,
             self._std_weight_position * mean[4],
-            self._std_weight_position * mean[4]]
+            1e-2,]
         std_vel = [
             self._std_weight_velocity * mean[4],
             self._std_weight_velocity * mean[4],
             self._std_weight_velocity * mean[4],
             1e-5,
             self._std_weight_velocity * mean[4],
-            self._std_weight_velocity * mean[4]]
+            1e-5,]
         motion_cov = np.diag(np.square(np.r_[std_pos, std_vel]))
 
         mean = np.dot(self._motion_mat, mean)
@@ -153,7 +153,7 @@ class KalmanFilter(object):
             self._std_weight_position * mean[4],
             1e-1,
             self._std_weight_position * mean[4],
-            self._std_weight_position * mean[4]]
+            1e-1,]
         innovation_cov = np.diag(np.square(std))
 
         mean = np.dot(self._update_mat, mean)
