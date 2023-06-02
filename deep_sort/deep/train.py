@@ -8,15 +8,16 @@ import torch
 import torch.backends.cudnn as cudnn
 import torchvision
 
-from model import Net
+from model_ import Net
 
-parser = argparse.ArgumentParser(description="Train on market1501")
+parser = argparse.ArgumentParser(description="Train on animal_track")
 parser.add_argument("--data-dir",default='data',type=str)
 parser.add_argument("--no-cuda",action="store_true")
 parser.add_argument("--gpu-id",default=0,type=int)
 parser.add_argument("--lr",default=0.1, type=float)
 parser.add_argument("--interval",'-i',default=20,type=int)
 parser.add_argument('--resume', '-r',action='store_true')
+parser.add_argument('--resize', default = (190,210), type=int) # height 128, width 64 가 기존 model default였음
 args = parser.parse_args()
 
 # device
@@ -26,19 +27,20 @@ if torch.cuda.is_available() and not args.no_cuda:
 
 # data loading
 root = args.data_dir
-train_dir = os.path.join(root,"train")
-test_dir = os.path.join(root,"test")
+train_dir = os.path.join(root,"train_")
+test_dir = os.path.join(root,"valid_")
 transform_train = torchvision.transforms.Compose([
-    torchvision.transforms.RandomCrop((128,64),padding=4),
+    torchvision.transforms.Resize((args.resize)),
     torchvision.transforms.RandomHorizontalFlip(),
     torchvision.transforms.ToTensor(),
     torchvision.transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 ])
 transform_test = torchvision.transforms.Compose([
-    torchvision.transforms.Resize((128,64)),
+    torchvision.transforms.Resize((args.resize)),
     torchvision.transforms.ToTensor(),
     torchvision.transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 ])
+
 trainloader = torch.utils.data.DataLoader(
     torchvision.datasets.ImageFolder(train_dir, transform=transform_train),
     batch_size=64,shuffle=True
@@ -133,7 +135,7 @@ def test(epoch):
     acc = 100.*correct/total
     if acc > best_acc:
         best_acc = acc
-        print("Saving parameters to checkpoint/ckpt.t7")
+        print("Saving parameters to checkpoint/ckpt_new.t7")
         checkpoint = {
             'net_dict':net.state_dict(),
             'acc':acc,
@@ -141,7 +143,7 @@ def test(epoch):
         }
         if not os.path.isdir('checkpoint'):
             os.mkdir('checkpoint')
-        torch.save(checkpoint, './checkpoint/ckpt.t7')
+        torch.save(checkpoint, './checkpoint/ckpt_new_2.t7')
 
     return test_loss/len(testloader), 1.- correct/total
 
@@ -166,7 +168,7 @@ def draw_curve(epoch, train_loss, train_err, test_loss, test_err):
     if epoch == 0:
         ax0.legend()
         ax1.legend()
-    fig.savefig("train.jpg")
+    fig.savefig("train_기존.jpg")
 
 # lr decay
 def lr_decay():

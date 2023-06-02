@@ -16,7 +16,7 @@ parser.add_argument("--no-cuda",action="store_true")
 parser.add_argument("--gpu-id",default=0,type=int)
 parser.add_argument("--lr",default=0.1, type=float)
 parser.add_argument("--interval",'-i',default=20,type=int)
-parser.add_argument('--resize', default = (128,64), type=int)
+parser.add_argument('--resize', default = (190,210), type=int)
 # parser.add_argument('--resume', '-r',action='store_true')
 args = parser.parse_args()
 
@@ -27,8 +27,8 @@ if torch.cuda.is_available() and not args.no_cuda:
 
 # data loading
 root = args.data_dir
-train_dir = os.path.join(root,"train")
-test_dir = os.path.join(root,"test")
+train_dir = os.path.join(root,"train_")
+test_dir = os.path.join(root,"valid_")
 transform_train = torchvision.transforms.Compose([
     torchvision.transforms.Resize((args.resize)),
     torchvision.transforms.RandomHorizontalFlip(),
@@ -48,11 +48,11 @@ testloader = torch.utils.data.DataLoader(
     torchvision.datasets.ImageFolder(test_dir, transform=transform_test),
     batch_size=64,shuffle=True
 )
-num_classes = len(trainloader.dataset.classes)
+num_classes_ = len(trainloader.dataset.classes)
 
 # # net definition
 start_epoch = 0
-net = Attention_model(num_classes=num_classes)
+net = Attention_model(num_classes=10)
 # if args.resume:
 #     assert os.path.isfile("./checkpoint/ckpt.t7"), "Error: no checkpoint file found!"
 #     print('Loading from checkpoint/ckpt.t7')
@@ -134,7 +134,7 @@ def test(epoch):
     acc = 100.*correct/total
     if acc > best_acc:
         best_acc = acc
-        print("Saving parameters to checkpoint/animal_tracking.t7")
+        print("Saving parameters to checkpoint/animal_tracking_2.t7")
         checkpoint = {
             'net_dict':net.state_dict(),
             'acc':acc,
@@ -142,7 +142,7 @@ def test(epoch):
         }
         if not os.path.isdir('checkpoint'):
             os.mkdir('checkpoint')
-        torch.save(checkpoint, './checkpoint/animal_tracking.t7')
+        torch.save(checkpoint, './checkpoint/animal_tracking_2.t7')
 
     return test_loss/len(testloader), 1.- correct/total
 
@@ -167,7 +167,7 @@ def draw_curve(epoch, train_loss, train_err, test_loss, test_err):
     if epoch == 0:
         ax0.legend()
         ax1.legend()
-    fig.savefig("train.jpg")
+    fig.savefig("train_attention_2.jpg")
 
 # lr decay
 def lr_decay():

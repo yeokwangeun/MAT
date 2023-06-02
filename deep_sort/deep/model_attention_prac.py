@@ -13,7 +13,7 @@ class New_Layer(nn.Module):
         super(New_Layer,self).__init__()
         self.layer = layer_
         self.conv1x1 = nn.Conv2d(in_channel, out_channel, kernel_size=1, stride=1, bias=False)
-        self.avgpool = nn.AdaptiveAvgPool2d((8, 4))
+        self.avgpool = nn.AdaptiveAvgPool2d((12, 14))
     def forward(self,x):
         x1 = self.layer(x)
         x2 = self.conv1x1(x1)
@@ -22,7 +22,7 @@ class New_Layer(nn.Module):
         return x1,x2
 
 class Attention_model(nn.Module):
-    def __init__(self,num_classes=134 ,reid=False):
+    def __init__(self,num_classes=751 ,reid=False):
         super(Attention_model,self).__init__()
         model = mt_.Net()
         model_path = '/workspace/MAT/deep_sort/deep/checkpoint/ckpt.t7'
@@ -33,12 +33,17 @@ class Attention_model(nn.Module):
         self.layer2 = New_Layer(model.layer2,128,512)
         self.layer3 = New_Layer(model.layer3,256,512)
         self.layer4 = model.layer4
-        self.avgpool = nn.AvgPool2d((8,4),1)
+        self.avgpool = nn.AdaptiveAvgPool2d((1,1))
         self.classifier1 = nn.Sequential(
             nn.Linear(2048, 512),
             nn.BatchNorm1d(512),
             nn.ReLU(inplace=True),
-            nn.Dropout()
+            nn.Dropout(),
+            nn.Linear(512, 256),
+            nn.BatchNorm1d(256),
+            nn.ReLU(inplace=True),
+            nn.Dropout(),
+            nn.Linear(256, num_classes),
         )
         self.classifier2 = model.classifier
         self.reid = reid
@@ -54,12 +59,15 @@ class Attention_model(nn.Module):
         x_ = torch.cat((x1_,x2_,x3_,x4),1)
         # print(x_.size())
         x_ = self.avgpool(x_)
+        # print(x_.size())
         x_ = x_.view(x_.size(0),-1)
+        # print(x_.size())
         # B x 128
         if self.reid:
             x_ = x_.div(x_.norm(p=2,dim=1,keepdim=True))
             return x_
         # 
-        x_ = self.classifier1(x_)   #FC layer1     
-        x_ = self.classifier2(x_)   #FC layer2 
+        # x_ = self.classifier2(x_)
+        x_ = self.classifier1(x_)        
+        
         return x_
