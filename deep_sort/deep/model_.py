@@ -75,7 +75,7 @@ class Net(nn.Module):
             nn.BatchNorm1d(256),
             nn.ReLU(inplace=True),
             nn.Dropout(),
-            nn.Linear(256, num_classes),
+            nn.Linear(256, 10),
         )
     
     def forward(self, x):

@@ -22,7 +22,7 @@ class New_Layer(nn.Module):
         return x1,x2
 
 class Attention_model(nn.Module):
-    def __init__(self,num_classes=751 ,reid=False):
+    def __init__(self,num_classes=10 ,reid=False):
         super(Attention_model,self).__init__()
         model = mt_.Net()
         model_path = '/workspace/MAT/deep_sort/deep/checkpoint/ckpt.t7'
