@@ -1,13 +1,24 @@
 import argparse
+import os
+import sys
 from sys import platform
+
+BASEDIR = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(BASEDIR, "yolov5"))
 
 from yolov3.models import *  # set ONNX_EXPORT in models.py
 from yolov3.utils.datasets import *
 from yolov3.utils.utils import *
+from models.yolo import Model
 from deep_sort import DeepSort
 
 deepsort = DeepSort("deep_sort/deep/checkpoint/ckpt.t7")
 palette = (2 ** 11 - 1, 2 ** 15 - 1, 2 ** 20 - 1)
+
+
+def intersect_dicts(da, db, exclude=()):
+    # Dictionary intersection of matching keys and shapes, omitting 'exclude' keys, using da values
+    return {k: v for k, v in da.items() if k in db and all(x not in k for x in exclude) and v.shape == db[k].shape}
 
 
 def bbox_rel(image_width, image_height, bbox_left, bbox_top, bbox_w, bbox_h):
@@ -57,16 +68,24 @@ def detect(save_img=True):
         shutil.rmtree(out)  # delete output folder
     os.makedirs(out)  # make new output folder
 
-    # Initialize model
-    model = Darknet(opt.cfg, img_size)
+    # # Initialize model
+    # model = Darknet(opt.cfg, img_size)
 
-    # Load weights
-    attempt_download(weights)
-    if weights.endswith('.pt'):  # pytorch format
-        model.load_state_dict(torch.load(weights, map_location=device)['model'])
-    else:  # darknet format
-        load_darknet_weights(model, weights)
+    # # Load weights
+    # attempt_download(weights)
+    # if weights.endswith('.pt'):  # pytorch format
+    #     model.load_state_dict(torch.load(weights, map_location=device)['model'])
+    # else:  # darknet format
+    #     load_darknet_weights(model, weights)
 
+    yolo_weights = os.path.join(BASEDIR, "yolov5/weights/yolov5m.pt")
+    yolo_ckpt = torch.load(yolo_weights, map_location="cpu")
+    model = Model(yolo_ckpt['model'].yaml, ch=3)
+    exclude = []
+    csd = yolo_ckpt['model'].float().state_dict()  # checkpoint state_dict as FP32
+    csd = intersect_dicts(csd, model.state_dict(), exclude=exclude)  # intersect
+    model.load_state_dict(csd, strict=False)  # load
+    
     # Eval mode
     model.to(device).eval()
 
