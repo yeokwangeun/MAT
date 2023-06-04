@@ -8,16 +8,16 @@ import torch
 import torch.backends.cudnn as cudnn
 import torchvision
 
-from model_ import Net
+from model_attention_prac import Attention_model
 
-parser = argparse.ArgumentParser(description="Train on animal_track")
+parser = argparse.ArgumentParser(description="Train on animaltrack_attention")
 parser.add_argument("--data-dir",default='data',type=str)
 parser.add_argument("--no-cuda",action="store_true")
 parser.add_argument("--gpu-id",default=0,type=int)
 parser.add_argument("--lr",default=0.1, type=float)
 parser.add_argument("--interval",'-i',default=20,type=int)
-parser.add_argument('--resume', '-r',action='store_true')
-parser.add_argument('--resize', default = (190,210), type=int) # height 128, width 64 가 기존 model default였음
+parser.add_argument('--resize', default = (190,210), type=int)
+# parser.add_argument('--resume', '-r',action='store_true')
 args = parser.parse_args()
 
 # device
@@ -40,7 +40,6 @@ transform_test = torchvision.transforms.Compose([
     torchvision.transforms.ToTensor(),
     torchvision.transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 ])
-
 trainloader = torch.utils.data.DataLoader(
     torchvision.datasets.ImageFolder(train_dir, transform=transform_train),
     batch_size=64,shuffle=True
@@ -49,20 +48,20 @@ testloader = torch.utils.data.DataLoader(
     torchvision.datasets.ImageFolder(test_dir, transform=transform_test),
     batch_size=64,shuffle=True
 )
-num_classes = len(trainloader.dataset.classes)
+num_classes_ = len(trainloader.dataset.classes)
 
-# net definition
+# # net definition
 start_epoch = 0
-net = Net(num_classes=num_classes)
-if args.resume:
-    assert os.path.isfile("./checkpoint/ckpt.t7"), "Error: no checkpoint file found!"
-    print('Loading from checkpoint/ckpt.t7')
-    checkpoint = torch.load("./checkpoint/ckpt.t7")
-    # import ipdb; ipdb.set_trace()
-    net_dict = checkpoint['net_dict']
-    net.load_state_dict(net_dict)
-    best_acc = checkpoint['acc']
-    start_epoch = checkpoint['epoch']
+net = Attention_model(num_classes=10)
+# if args.resume:
+#     assert os.path.isfile("./checkpoint/ckpt.t7"), "Error: no checkpoint file found!"
+#     print('Loading from checkpoint/ckpt.t7')
+#     checkpoint = torch.load("./checkpoint/ckpt.t7")
+#     # import ipdb; ipdb.set_trace()
+#     net_dict = checkpoint['net_dict']
+#     net.load_state_dict(net_dict)
+#     best_acc = checkpoint['acc']
+#     start_epoch = checkpoint['epoch']
 net.to(device)
 
 # loss and optimizer
@@ -135,7 +134,7 @@ def test(epoch):
     acc = 100.*correct/total
     if acc > best_acc:
         best_acc = acc
-        print("Saving parameters to checkpoint/ckpt_new.t7")
+        print("Saving parameters to checkpoint/animal_tracking_2.t7")
         checkpoint = {
             'net_dict':net.state_dict(),
             'acc':acc,
@@ -143,7 +142,7 @@ def test(epoch):
         }
         if not os.path.isdir('checkpoint'):
             os.mkdir('checkpoint')
-        torch.save(checkpoint, './checkpoint/ckpt_new_2.t7')
+        torch.save(checkpoint, './checkpoint/animal_tracking_2.t7')
 
     return test_loss/len(testloader), 1.- correct/total
 
@@ -168,7 +167,7 @@ def draw_curve(epoch, train_loss, train_err, test_loss, test_err):
     if epoch == 0:
         ax0.legend()
         ax1.legend()
-    fig.savefig("train_기존.jpg")
+    fig.savefig("train_attention_2.jpg")
 
 # lr decay
 def lr_decay():

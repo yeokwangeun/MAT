@@ -3,17 +3,19 @@ import torchvision.transforms as transforms
 import numpy as np
 import cv2
 
-from .model import Net
+from model import Net #기존모델에 animal track data pretrained
+from model_attention_prac import Attention_model # attention model에 animal track data pretrained
 
 class Extractor(object):
     def __init__(self, model_path, use_cuda=True):
         self.net = Net(reid=True)
         self.device = "cuda" if torch.cuda.is_available() and use_cuda else "cpu"
         state_dict = torch.load(model_path, map_location=lambda storage, loc: storage)['net_dict']
-        self.net.load_state_dict(state_dict)
+        self.net.load_state_dict(state_dict) 
         print("Loading weights from {}... Done!".format(model_path))
         self.net.to(self.device)
-        self.size = (64, 128)
+        #size 바꾸기
+        self.size = (190,210)
         self.norm = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
