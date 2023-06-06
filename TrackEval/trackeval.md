@@ -24,13 +24,18 @@ Adapt to your your own paths
     - Outputs are stored under `TrackEval/data/trackers/mot_challenge/AnimalTrack-<test/train>/<model>/data/<vid-name>.txt`
         ex. `TrackEval/data/trackers/mot_challenge/AnimalTrack-test/DeepSORT/data/chicken_1.txt`
 
+### For PersonPath22
+- need to filter out the tracker outputs, based on the sampling result of the ground-truth data
+- run `./MAT/TrackEval/utils/sample_frames.sh`, after setting the paths in the script
+- when running TrackEval below, don't forget to set --TRACKERS_TO_EVAL to the ***"filtered"*** tracker name
+
 ## 2. Run TrackEval
 ``` 
 # Usage
-python ./MAT/TrackEval/scripts/run_mot_challenge.py --BENCHMARK AnimalTrack --SPLIT_TO_EVAL <train/test> --USE_PARALLEL False --DO_PREPROC False
+python ./MAT/TrackEval/scripts/run_mot_challenge.py --BENCHMARK AnimalTrack --SPLIT_TO_EVAL <train/test> --USE_PARALLEL False --DO_PREPROC False --TRACKERS_TO_EVAL <tracker-model>
 
 # ex. 
-python ./MAT/TrackEval/scripts/run_mot_challenge.py --BENCHMARK AnimalTrack --SPLIT_TO_EVAL train --USE_PARALLEL False --DO_PREPROC False 
+python ./MAT/TrackEval/scripts/run_mot_challenge.py --BENCHMARK AnimalTrack --SPLIT_TO_EVAL train --USE_PARALLEL False --DO_PREPROC False --TRACKERS_TO_EVAL DeepSORT
 ```
 - more options available in `TrackEval/scripts/run_mot_challenge.py`
 
