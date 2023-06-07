@@ -122,7 +122,7 @@ def detect(save_img=True):
             confs = []
                 # Write results
             det = [value for value in gt_dict_.values()]
-            print(len(det))
+            # print(len(det))
             # {"tager_id" : [top_left_x, top_left_y, width, height, confidence, class, visivility]}}
             for top_left_x, top_left_y, bbox_w, bbox_h, conf, cls, visivility in det:
                 img_h, img_w, _ = im0.shape  # get image shape
