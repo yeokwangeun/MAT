@@ -1,2 +1,6 @@
 # output folder
 output/
+*ipynb
+__pycache__
+*.mp4
+*/weights/*
