@@ -39,7 +39,7 @@ def draw_boxes(img, bbox, identities=None, offset=(0,0)):
         color = compute_color_for_labels(id)
         label = '{}{:d}'.format("", id)
         t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, 2 , 2)[0]
-        cv2.rectangle(img, (x1, y1),(x2,y2), color, 3)
+        cv2.rectangle(img, (x1, y1),(x2, y2), color, 3)
         cv2.rectangle(img, (x1, y1), (x1 + t_size[0] + 3, y1 + t_size[1] + 4), color, -1)
         cv2.putText(img, label, (x1, y1 + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, 2, [255, 255, 255], 2)
     return img
@@ -101,8 +101,9 @@ def detect(save_img=True):
     gt_file_path = opt.gt_file
     gt_dict = get_gt(gt_file_path)
     
-    #frame iteration    
-    for path, img, im0s, vid_cap in dataset:
+    #frame iteration
+    cnt = 0
+    for index, (path, img, im0s, vid_cap) in enumerate(dataset):
         t = time.time()
         # frame 1개 detection result extract
         for i in range(len(path)):  # detections per image
@@ -114,19 +115,19 @@ def detect(save_img=True):
             save_path = str(Path(out) / Path(p).name)
             # s += '%gx%g ' % img.shape[2:]  # print string
             #frame별 object dictionary
-            gt_dict_ = gt_dict[i+1]
-            if gt_dict_ is not None and len(gt_dict_):
-                bbox_xywh = []
-                confs = []
-                
+        # print(f'frame no {i+1}')
+        gt_dict_ = gt_dict[index+1]
+        if gt_dict_ is not None and len(gt_dict_):
+            bbox_xywh = []
+            confs = []
                 # Write results
             det = [value for value in gt_dict_.values()]
+            print(len(det))
             # {"tager_id" : [top_left_x, top_left_y, width, height, confidence, class, visivility]}}
             for top_left_x, top_left_y, bbox_w, bbox_h, conf, cls, visivility in det:
                 img_h, img_w, _ = im0.shape  # get image shape
                 x_c = int(top_left_x+(bbox_w/2))
                 y_c = int(top_left_y+(bbox_h/2))
-                #print(x_c, y_c, bbox_w, bbox_h)
                 obj = [x_c, y_c, bbox_w, bbox_h]
                 bbox_xywh.append(obj)
                 confs.append([conf])
@@ -135,15 +136,15 @@ def detect(save_img=True):
                 # print(torch.Tensor(bbox_xywh))
                 # print('confs')
                 # print(torch.Tensor(confs))
-                
                 #deep sort update
                 outputs = deepsort.update((torch.Tensor(bbox_xywh)), (torch.Tensor(confs)) , im0)
+
                 if len(outputs) > 0:
                     bbox_xyxy = outputs[:, :4]
                     identities = outputs[:, -1]
                     draw_boxes(im0, bbox_xyxy, identities)
+                
                 # print('\n\n\t\ttracked objects')
-                # print(outputs)
 
             # Print time (inference + NMS)
             # print('%sDone. (%.3fs)' % (s, time.time() - t))
