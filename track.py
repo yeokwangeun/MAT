@@ -12,7 +12,6 @@ from yolov3.utils.utils import *
 from models.yolo import Model
 from deep_sort import DeepSort
 
-deepsort = DeepSort("deep_sort/deep/checkpoint/ckpt.t7")
 palette = (2 ** 11 - 1, 2 ** 15 - 1, 2 ** 20 - 1)
 
 
@@ -57,10 +56,11 @@ def draw_boxes(img, bbox, identities=None, offset=(0,0)):
 
 
 
-def detect(save_img=True):
+def detect(opt, save_img=True):
     img_size = (320, 192) if ONNX_EXPORT else opt.img_size  # (320, 192) or (416, 256) or (608, 352) for (height, width)
-    out, source, weights, half, view_img, save_txt = opt.output, opt.source, opt.weights, opt.half, opt.view_img, opt.save_txt
+    out, source, half, view_img, save_txt = opt.output, opt.source, opt.half, opt.view_img, opt.save_txt
     webcam = source == '0' or source.startswith('rtsp') or source.startswith('http') or source.endswith('.txt')
+    deepsort = DeepSort(opt.cnn_weights)
 
     # Initialize
     device = torch_utils.select_device(device='cpu' if ONNX_EXPORT else opt.device)
@@ -78,7 +78,8 @@ def detect(save_img=True):
     # else:  # darknet format
     #     load_darknet_weights(model, weights)
 
-    yolo_weights = os.path.join(BASEDIR, "yolov5/weights/yolov5m.pt")
+    # yolo_weights = os.path.join(BASEDIR, "yolov5/weights/yolo_animaltrack.pt")
+    yolo_weights = os.path.join(BASEDIR, opt.yolo_weights)
     yolo_ckpt = torch.load(yolo_weights, map_location="cpu")
     model = Model(yolo_ckpt['model'].yaml, ch=3)
     exclude = []
@@ -218,7 +219,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--cfg', type=str, default='yolov3/cfg/yolov3-spp.cfg', help='*.cfg path')
     parser.add_argument('--names', type=str, default='yolov3/data/coco.names', help='*.names path')
-    parser.add_argument('--weights', type=str, default='yolov3/weights/yolov3-spp-ultralytics.pt', help='path to weights file')
+    parser.add_argument('--yolo-weights', type=str, default='yolov5/weights/yolov5m.pt', help='path to yolo weights file')
+    parser.add_argument('--cnn-weights', type=str, default='deep_sort/deep/checkpoint/base.t7', help='path to cnn weights file')
     parser.add_argument('--source', type=str, default='0', help='source')  # input file/folder, 0 for webcam
     parser.add_argument('--output', type=str, default='output', help='output folder')  # output folder
     parser.add_argument('--img-size', type=int, default=608, help='inference size (pixels)')
@@ -229,10 +231,10 @@ if __name__ == '__main__':
     parser.add_argument('--device', default='', help='device id (i.e. 0 or 0,1) or cpu')
     parser.add_argument('--view-img', action='store_true', help='display results')
     parser.add_argument('--save-txt', action='store_true', help='save results to *.txt')
-    parser.add_argument('--classes', nargs='+', type=int, default=[0], help='filter by class')
+    parser.add_argument('--classes', nargs='+', type=int, default=None, help='filter by class')
     parser.add_argument('--agnostic-nms', action='store_true', help='class-agnostic NMS')
     opt = parser.parse_args()
     print(opt)
 
     with torch.no_grad():
-        detect()
+        detect(opt)
