@@ -41,7 +41,7 @@ for vid in $src/*.mp4; do
     # Run tracker - outputs will be saved under $out/$vid_name/raw_tracker.csv
     ###############################################
     # EDIT cfg, weights PATH TO YOUR OWN  
-    python3 $mat/track.py --source $vid --output $out/$vid_name --save-txt \
+    python3 $mat/track.py --source $vid --output $out/$vid_name --save-txt --half \
     --cfg < path to yolov3.cfg > --weights < path to yolov3.weights >
     ###############################################
     echo "Done tracking $vid, ending at $(date)" >> $log
