@@ -167,15 +167,15 @@ def detect(opt, save_img=True):
                     #print(torch.Tensor(bbox_xywh))
                     #print('confs')
                     #print(torch.Tensor(confs))
-                    outputs = deepsort.update((torch.Tensor(bbox_xywh)), (torch.Tensor(confs)) , im0)
-                    if len(outputs) > 0:
-                        bbox_xyxy = outputs[:, :4]
-                        identities = outputs[:, -1]
-                        draw_boxes(im0, bbox_xyxy, identities)
-                    #print('\n\n\t\ttracked objects')
-                    #print(outputs)
+                outputs = deepsort.update((torch.Tensor(bbox_xywh)), (torch.Tensor(confs)) , im0)
 
-            result.append(np.insert(outputs, 0, frame_num+1, axis=1))
+                if len(outputs) > 0:
+                    bbox_xyxy = outputs[:, :4]
+                    identities = outputs[:, -1]
+                    draw_boxes(im0, bbox_xyxy, identities)
+                #print('\n\n\t\ttracked objects')
+                    # print(outputs)
+                    result.append(np.insert(outputs, 0, frame_num+1, axis=1))
 
             # Print time (inference + NMS)
             print('%sDone. (%.3fs)' % (s, time.time() - t))
