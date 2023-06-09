@@ -1,6 +1,8 @@
 import argparse
 from sys import platform
 
+import numpy as np
+
 from yolov3.models import *  # set ONNX_EXPORT in models.py
 from yolov3.utils.datasets import *
 from yolov3.utils.utils import *
@@ -102,7 +104,9 @@ def detect(save_img=True):
         if img.ndimension() == 3:
             img = img.unsqueeze(0)
         pred = model(img)[0]
-        depth = get_depth(im0s, midas_params)
+        depth_map = get_depth(im0s, midas_params)
+        ## Normalize depth_map to 0-1
+        # depth_map = (depth_map - np.min(depth_map)) / (np.max(depth_map) - np.min(depth_map))
 
         if opt.half:
             pred = pred.float()
@@ -140,7 +144,13 @@ def detect(save_img=True):
                     bbox_h = abs(xyxy[1].item() - xyxy[3].item())
                     x_c, y_c, bbox_w, bbox_h = bbox_rel(img_w, img_h, bbox_left, bbox_top, bbox_w, bbox_h)
                     #print(x_c, y_c, bbox_w, bbox_h)
-                    obj = [x_c, y_c, bbox_w, bbox_h]
+                    print(depth_map.shape)
+                    print(depth_map)
+                    print(bbox_left, bbox_top, bbox_w, bbox_h)
+                    bbox_depth_map = depth_map[int(bbox_top):int(bbox_top+bbox_h), int(bbox_left):int(bbox_left+bbox_w)]
+                    bbox_d = np.max(bbox_depth_map) - np.min(bbox_depth_map)
+                    z_c = np.mean(bbox_depth_map)
+                    obj = [x_c, y_c, z_c, bbox_w, bbox_h, bbox_d]
                     bbox_xywh.append(obj)
                     confs.append([conf.item()])
                     label = '%s %.2f' % (names[int(cls)], conf)
@@ -151,7 +161,7 @@ def detect(save_img=True):
                     #print(torch.Tensor(confs))
                     outputs = deepsort.update((torch.Tensor(bbox_xywh)), (torch.Tensor(confs)) , im0)
                     if len(outputs) > 0:
-                        bbox_xyxy = outputs[:, :4]
+                        bbox_xyxy = np.concatenate((outputs[:, :2], outputs[:, 3:5]), axis=1)
                         identities = outputs[:, -1]
                         draw_boxes(im0, bbox_xyxy, identities)
                     #print('\n\n\t\ttracked objects')

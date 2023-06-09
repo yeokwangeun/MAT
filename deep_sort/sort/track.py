@@ -18,9 +18,8 @@ class TrackState:
 
 class Track:
     """
-    A single target track with state space `(x, y, a, h)` and associated
-    velocities, where `(x, y)` is the center of the bounding box, `a` is the
-    aspect ratio and `h` is the height.
+    A single target track with state space `(x, y, z, w/h, h, d)` and associated
+    velocities, where `(x, y, z)` is the center of the bounding box, and `h` is the height.
 
     Parameters
     ----------
@@ -81,8 +80,8 @@ class Track:
         self._max_age = max_age
 
     def to_tlwh(self):
-        """Get current position in bounding box format `(top left x, top left y,
-        width, height)`.
+        """Get current position in bounding box format `(top left x, top left y, top left z,
+        width, height, depth)`.
 
         Returns
         -------
@@ -90,9 +89,9 @@ class Track:
             The bounding box.
 
         """
-        ret = self.mean[:4].copy()
-        ret[2] *= ret[3]
-        ret[:2] -= ret[2:] / 2
+        ret = self.mean[:6].copy()
+        ret[3] *= ret[4]
+        ret[:3] -= ret[3:] / 2
         return ret
 
     def to_tlbr(self):
@@ -106,7 +105,7 @@ class Track:
 
         """
         ret = self.to_tlwh()
-        ret[2:] = ret[:2] + ret[2:]
+        ret[3:] = ret[:3] + ret[3:]
         return ret
 
     def predict(self, kf):

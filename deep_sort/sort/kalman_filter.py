@@ -26,19 +26,19 @@ class KalmanFilter(object):
 
     The 8-dimensional state space
 
-        x, y, a, h, vx, vy, va, vh
+        x, y, z, a, h, d, vx, vy, vz, va, vh, vd
 
-    contains the bounding box center position (x, y), aspect ratio a, height h,
+    contains the bounding box center position (x, y, z), w/h ratio, height h, depth d,
     and their respective velocities.
 
     Object motion follows a constant velocity model. The bounding box location
-    (x, y, a, h) is taken as direct observation of the state space (linear
+    (x, y, z, a, h, d) is taken as direct observation of the state space (linear
     observation model).
 
     """
 
     def __init__(self):
-        ndim, dt = 4, 1.
+        ndim, dt = 6, 1.
 
         # Create Kalman filter model matrices.
         self._motion_mat = np.eye(2 * ndim, 2 * ndim)
@@ -74,14 +74,18 @@ class KalmanFilter(object):
         mean = np.r_[mean_pos, mean_vel]
 
         std = [
-            2 * self._std_weight_position * measurement[3],
-            2 * self._std_weight_position * measurement[3],
+            2 * self._std_weight_position * measurement[4],
+            2 * self._std_weight_position * measurement[4],
+            2 * self._std_weight_position * measurement[4],
             1e-2,
-            2 * self._std_weight_position * measurement[3],
-            10 * self._std_weight_velocity * measurement[3],
-            10 * self._std_weight_velocity * measurement[3],
+            2 * self._std_weight_position * measurement[4],
+            2 * self._std_weight_position * measurement[4],
+            10 * self._std_weight_velocity * measurement[4],
+            10 * self._std_weight_velocity * measurement[4],
+            10 * self._std_weight_velocity * measurement[4],
             1e-5,
-            10 * self._std_weight_velocity * measurement[3]]
+            10 * self._std_weight_velocity * measurement[4],
+            10 * self._std_weight_velocity * measurement[4]]
         covariance = np.diag(np.square(std))
         return mean, covariance
 
@@ -105,15 +109,19 @@ class KalmanFilter(object):
 
         """
         std_pos = [
-            self._std_weight_position * mean[3],
-            self._std_weight_position * mean[3],
+            self._std_weight_position * mean[4],
+            self._std_weight_position * mean[4],
+            self._std_weight_position * mean[4],
             1e-2,
-            self._std_weight_position * mean[3]]
+            self._std_weight_position * mean[4],
+            self._std_weight_position * mean[4]]
         std_vel = [
-            self._std_weight_velocity * mean[3],
-            self._std_weight_velocity * mean[3],
+            self._std_weight_velocity * mean[4],
+            self._std_weight_velocity * mean[4],
+            self._std_weight_velocity * mean[4],
             1e-5,
-            self._std_weight_velocity * mean[3]]
+            self._std_weight_velocity * mean[4],
+            self._std_weight_velocity * mean[4]]
         motion_cov = np.diag(np.square(np.r_[std_pos, std_vel]))
 
         mean = np.dot(self._motion_mat, mean)
@@ -140,10 +148,12 @@ class KalmanFilter(object):
 
         """
         std = [
-            self._std_weight_position * mean[3],
-            self._std_weight_position * mean[3],
+            self._std_weight_position * mean[4],
+            self._std_weight_position * mean[4],
+            self._std_weight_position * mean[4],
             1e-1,
-            self._std_weight_position * mean[3]]
+            self._std_weight_position * mean[4],
+            self._std_weight_position * mean[4]]
         innovation_cov = np.diag(np.square(std))
 
         mean = np.dot(self._update_mat, mean)
@@ -217,8 +227,8 @@ class KalmanFilter(object):
         """
         mean, covariance = self.project(mean, covariance)
         if only_position:
-            mean, covariance = mean[:2], covariance[:2, :2]
-            measurements = measurements[:, :2]
+            mean, covariance = mean[:3], covariance[:3, :3]
+            measurements = measurements[:, :3]
 
         cholesky_factor = np.linalg.cholesky(covariance)
         d = measurements - mean
